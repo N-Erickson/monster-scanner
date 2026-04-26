@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monster Scanner - Keeping You Safe All Night</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Orbitron:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  body {
+    background: #12123a;
+    color: #44ddff;
+    font-family: 'Nunito', sans-serif;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Subtle starfield background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(1px 1px at 10% 20%, #ffffff55, transparent),
+      radial-gradient(1px 1px at 30% 70%, #ffffff44, transparent),
+      radial-gradient(1px 1px at 50% 10%, #ffffff33, transparent),
+      radial-gradient(1px 1px at 70% 40%, #ffffff55, transparent),
+      radial-gradient(1px 1px at 90% 80%, #ffffff44, transparent),
+      radial-gradient(1px 1px at 15% 90%, #ffffff33, transparent),
+      radial-gradient(1px 1px at 85% 15%, #ffffff44, transparent),
+      radial-gradient(1px 1px at 45% 55%, #ffffff22, transparent),
+      radial-gradient(1px 1px at 65% 95%, #ffffff33, transparent),
+      radial-gradient(1px 1px at 25% 45%, #ffffff44, transparent),
+      radial-gradient(1px 1px at 55% 35%, #ffffff22, transparent),
+      radial-gradient(1px 1px at 75% 65%, #ffffff33, transparent),
+      radial-gradient(1.5px 1.5px at 20% 50%, #ffffff55, transparent),
+      radial-gradient(1.5px 1.5px at 80% 30%, #ffffff44, transparent),
+      radial-gradient(1.5px 1.5px at 40% 85%, #ffffff33, transparent),
+      radial-gradient(1.5px 1.5px at 60% 5%, #ffffff22, transparent),
+      radial-gradient(1px 1px at 5% 60%, #ffffff44, transparent),
+      radial-gradient(1px 1px at 95% 50%, #ffffff33, transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    text-align: center;
+    padding: 1vh 10px;
+    border-bottom: 2px solid #44ddff44;
+    background: linear-gradient(180deg, #181855 0%, #12123a 100%);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1rem, 3vw, 2rem);
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px #44ddff, 0 0 40px #44ddff66;
+  }
+
+  header .subtitle {
+    font-size: clamp(0.55rem, 1.2vw, 0.9rem);
+    color: #44ddff99;
+    margin-top: 2px;
+    letter-spacing: 3px;
+    font-weight: 600;
+  }
+
+  .big-status-bar {
+    text-align: center;
+    padding: 0.6vh 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(0.6rem, 1.8vw, 1.1rem);
+    font-weight: 700;
+    letter-spacing: 4px;
+    background: linear-gradient(90deg, #44ddff10, #66ffaa20, #44ddff10);
+    border-bottom: 1px solid #44ddff33;
+    animation: statusGlow 3s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+    color: #66ffaa;
+    flex-shrink: 0;
+  }
+
+  @keyframes statusGlow {
+    0%, 100% { text-shadow: 0 0 10px #66ffaa; }
+    50% { text-shadow: 0 0 25px #66ffaa, 0 0 50px #66ffaa44; }
+  }
+
+  .reassurance-banner {
+    text-align: center;
+    padding: 0.4vh 10px;
+    font-size: clamp(0.7rem, 1.5vw, 1.05rem);
+    font-weight: 600;
+    color: #66ffaacc;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+    transition: opacity 0.8s ease-in-out;
+    animation: reassurancePulse 4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes reassurancePulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; text-shadow: 0 0 12px #66ffaa44; }
+  }
+
+  /* Main dashboard fills all remaining space */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr minmax(0, 1fr);
+    gap: min(1.2vh, 10px);
+    padding: min(1.2vh, 10px);
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .panel {
+    background: #16163e;
+    border: 1px solid #44ddff33;
+    border-radius: 10px;
+    padding: min(1.5vh, 14px);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #44ddff, transparent);
+  }
+
+  .panel-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(0.5rem, 1vw, 0.75rem);
+    letter-spacing: 2px;
+    color: #44ddff88;
+    margin-bottom: min(1vh, 8px);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* Radar Panel */
+  .radar-panel {
+    grid-row: span 2;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .radar-container {
+    position: relative;
+    /* Scale radar to fit panel: use the smaller of available width/height */
+    width: min(90%, 40vh);
+    aspect-ratio: 1;
+    margin: 0 auto;
+    flex-shrink: 1;
+  }
+
+  .radar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #44ddff66;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle, #101040 0%, #0a0a30 100%);
+    animation: shieldPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes shieldPulse {
+    0%, 100% { border-color: #44ddff55; box-shadow: 0 0 15px #44ddff15; }
+    50% { border-color: #44ddffaa; box-shadow: 0 0 30px #44ddff30, 0 0 60px #44ddff10; }
+  }
+
+  .radar-ring {
+    position: absolute;
+    border: 1px solid #44ddff1a;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .radar-ring:nth-child(1) { width: 25%; height: 25%; }
+  .radar-ring:nth-child(2) { width: 50%; height: 50%; }
+  .radar-ring:nth-child(3) { width: 75%; height: 75%; }
+
+  .radar-line-h, .radar-line-v {
+    position: absolute;
+    background: #44ddff12;
+  }
+  .radar-line-h { width: 100%; height: 1px; top: 50%; }
+  .radar-line-v { height: 100%; width: 1px; left: 50%; }
+
+  .radar-sweep {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 0; left: 50%;
+    transform-origin: bottom left;
+    background: conic-gradient(from 0deg, transparent 0deg, #44ddff55 30deg, transparent 30deg);
+    animation: sweep 3s linear infinite;
+  }
+
+  @keyframes sweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .radar-center {
+    position: absolute;
+    width: 8px; height: 8px;
+    background: #44ddff;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px #44ddff;
+  }
+
+  .radar-label {
+    text-align: center;
+    margin-top: 0.5vh;
+    font-size: clamp(0.6rem, 1.2vw, 0.9rem);
+    color: #44ddffaa;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .room-dot {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #44ddff00;
+    transform: translate(-50%, -50%);
+    transition: background 0.5s, box-shadow 0.5s;
+  }
+  .room-dot.scanned {
+    background: #66ffaa;
+    box-shadow: 0 0 8px #66ffaa;
+    animation: dotPulse 2s ease-in-out infinite;
+  }
+  .room-dot.active-scan {
+    background: #ffcc00;
+    box-shadow: 0 0 12px #ffcc00;
+    animation: dotActive 0.5s ease-in-out infinite;
+  }
+  @keyframes dotPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes dotActive {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(2); }
+  }
+
+  .sound-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    height: 16px;
+    margin-top: 0.3vh;
+    flex-shrink: 0;
+  }
+  .sound-wave {
+    display: inline-block;
+    width: 3px;
+    background: #44ddff;
+    border-radius: 2px;
+    animation: soundWave 0.5s ease-in-out infinite alternate;
+  }
+  .sound-wave:nth-child(2) { animation-delay: 0.1s; }
+  .sound-wave:nth-child(3) { animation-delay: 0.2s; }
+  .sound-wave:nth-child(4) { animation-delay: 0.3s; }
+  .sound-wave:nth-child(5) { animation-delay: 0.15s; }
+  @keyframes soundWave {
+    from { height: 4px; }
+    to { height: 14px; }
+  }
+
+  /* Status Panel */
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: min(1vh, 8px);
+    flex: 1;
+    min-height: 0;
+  }
+
+  .status-item {
+    background: #12123a;
+    border: 1px solid #44ddff22;
+    border-radius: 8px;
+    padding: min(1vh, 8px) 4px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .status-item .label {
+    font-size: clamp(0.5rem, 0.9vw, 0.75rem);
+    color: #44ddff66;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  .status-item .value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(0.9rem, 2vw, 1.4rem);
+    font-weight: 700;
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .status-item .value.green { color: #66ffaa; }
+  .status-item .value.blue { color: #44ddff; }
+  .status-item .value.yellow { color: #ffcc00; }
+
+  .uptime-row {
+    margin-top: 0.5vh;
+    text-align: center;
+    font-size: clamp(0.55rem, 0.9vw, 0.75rem);
+    color: #44ddff66;
+    letter-spacing: 1px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .uptime-row span { color: #44ddff; }
+
+  /* Room Scan Panel */
+  .room-list {
+    display: flex;
+    flex-direction: column;
+    gap: min(0.6vh, 5px);
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .room-list::-webkit-scrollbar { width: 3px; }
+  .room-list::-webkit-scrollbar-track { background: transparent; }
+  .room-list::-webkit-scrollbar-thumb { background: #44ddff33; border-radius: 2px; }
+
+  .room-item {
+    display: flex;
+    align-items: center;
+    gap: min(1vw, 8px);
+    padding: min(0.7vh, 6px) min(1vw, 8px);
+    background: #12123a;
+    border: 1px solid #44ddff22;
+    border-radius: 8px;
+    font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+    transition: border-color 0.3s, background 0.3s, order 0s;
+    flex-shrink: 0;
+  }
+
+  .room-item.active-room {
+    order: -1;
+  }
+
+  .room-item.highlight {
+    border-color: #ffcc0066;
+  }
+
+  .room-item.clear-flash {
+    background: #66ffaa15;
+    border-color: #66ffaa55;
+  }
+
+  .room-icon {
+    width: 20px;
+    text-align: center;
+    font-size: clamp(0.8rem, 1.3vw, 1.1rem);
+  }
+
+  .room-name {
+    flex: 1;
+    color: #44ddffc0;
+    font-weight: 600;
+  }
+
+  .room-status {
+    font-size: clamp(0.55rem, 1vw, 0.8rem);
+    letter-spacing: 1px;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 700;
+    transition: all 0.3s;
+  }
+
+  .room-status.scanning {
+    color: #ffcc00;
+    border: 1px solid #ffcc0044;
+    animation: blink 1s ease-in-out infinite;
+  }
+  .room-status.clear {
+    color: #66ffaa;
+    border: 1px solid #66ffaa44;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Log Panel */
+  .log-panel {
+    grid-column: span 2;
+    min-height: 0;
+    /* panel is already flex-column; log-output fills it */
+  }
+
+  .log-output {
+    background: #0e0e30;
+    border: 1px solid #44ddff22;
+    border-radius: 8px;
+    padding: min(1vh, 8px);
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    font-size: clamp(0.6rem, 1.1vw, 0.85rem);
+    line-height: 1.6;
+  }
+
+  .log-output::-webkit-scrollbar { width: 4px; }
+  .log-output::-webkit-scrollbar-track { background: #12123a; }
+  .log-output::-webkit-scrollbar-thumb { background: #44ddff44; border-radius: 2px; }
+
+  .log-line { opacity: 0.85; }
+  .log-line .timestamp { color: #44ddff; font-weight: 600; }
+  .log-line .info { color: #44ddff88; }
+  .log-line .warn { color: #ffcc00; }
+  .log-line .success { color: #66ffaa; font-weight: bold; }
+
+  .scan-count-bar {
+    text-align: center;
+    padding: 0.4vh 8px;
+    font-size: clamp(0.55rem, 1vw, 0.8rem);
+    color: #44ddff55;
+    letter-spacing: 1px;
+    border-top: 1px solid #44ddff22;
+    background: #12123a;
+    position: relative;
+    z-index: 1;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .scan-count-bar strong { color: #44ddff; }
+
+  /* ===== Portrait / single-column layout ===== */
+  @media (max-aspect-ratio: 3/4) {
+    .dashboard {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto;
+    }
+
+    .radar-panel {
+      grid-row: span 1;
+    }
+
+    .radar-container {
+      width: min(60vw, 30vh);
+    }
+
+    .log-panel {
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-aspect-ratio: 3/4) and (max-height: 750px) {
+    .radar-container {
+      width: min(45vw, 22vh);
+    }
+  }
+
+  /* Very wide / landscape screens — give radar more room */
+  @media (min-aspect-ratio: 2/1) {
+    .radar-container {
+      width: min(90%, 50vh);
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MONSTER SCANNER</h1>
+  <div class="subtitle">KEEPING YOU SAFE ALL NIGHT</div>
+</header>
+
+<div class="big-status-bar" id="bigStatus">ALL SAFE! NO MONSTERS ANYWHERE</div>
+<div class="reassurance-banner" id="reassuranceBanner">You are completely safe right now</div>
+
+<div class="dashboard">
+  <!-- Radar Panel -->
+  <div class="panel radar-panel">
+    <div class="panel-title">Monster Radar</div>
+    <div class="radar-container">
+      <div class="radar">
+        <div class="radar-ring"></div>
+        <div class="radar-ring"></div>
+        <div class="radar-ring"></div>
+        <div class="radar-line-h"></div>
+        <div class="radar-line-v"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-center"></div>
+        <div class="room-dot" id="dot-bedroom" style="top:30%;left:35%"></div>
+        <div class="room-dot" id="dot-closet" style="top:25%;left:60%"></div>
+        <div class="room-dot" id="dot-underbed" style="top:45%;left:30%"></div>
+        <div class="room-dot" id="dot-bathroom" style="top:60%;left:65%"></div>
+        <div class="room-dot" id="dot-hallway" style="top:70%;left:40%"></div>
+        <div class="room-dot" id="dot-kitchen" style="top:55%;left:25%"></div>
+        <div class="room-dot" id="dot-livingroom" style="top:40%;left:70%"></div>
+        <div class="room-dot" id="dot-garage" style="top:75%;left:60%"></div>
+      </div>
+    </div>
+    <div class="radar-label">ALWAYS WATCHING FOR MONSTERS</div>
+    <div class="sound-indicator">
+      <div class="sound-wave"></div>
+      <div class="sound-wave"></div>
+      <div class="sound-wave"></div>
+      <div class="sound-wave"></div>
+      <div class="sound-wave"></div>
+    </div>
+  </div>
+
+  <!-- Status Panel -->
+  <div class="panel">
+    <div class="panel-title">Safety Report</div>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="label">MONSTERS FOUND</div>
+        <div class="value green" id="threatCount">0</div>
+      </div>
+      <div class="status-item">
+        <div class="label">ROOMS SAFE</div>
+        <div class="value blue" id="zonesClear">8/8</div>
+      </div>
+      <div class="status-item">
+        <div class="label">SCANNER POWER</div>
+        <div class="value yellow" id="scanPower">100%</div>
+      </div>
+      <div class="status-item">
+        <div class="label">PROTECTION</div>
+        <div class="value green" id="shieldStatus">MAX</div>
+      </div>
+    </div>
+    <div class="uptime-row">RUNNING FOR: <span id="uptime">00:00:00</span></div>
+  </div>
+
+  <!-- Room Scan Panel -->
+  <div class="panel">
+    <div class="panel-title">Room Checker</div>
+    <div class="room-list" id="roomList">
+      <div class="room-item" id="item-bedroom">
+        <div class="room-icon">&#x1F6CF;</div>
+        <div class="room-name">Bedroom</div>
+        <div class="room-status clear" id="status-bedroom">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-closet">
+        <div class="room-icon">&#x1F6AA;</div>
+        <div class="room-name">Closet</div>
+        <div class="room-status clear" id="status-closet">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-underbed">
+        <div class="room-icon">&#x1F6E1;</div>
+        <div class="room-name">Under the Bed</div>
+        <div class="room-status clear" id="status-underbed">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-bathroom">
+        <div class="room-icon">&#x1F6C1;</div>
+        <div class="room-name">Bathroom</div>
+        <div class="room-status clear" id="status-bathroom">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-hallway">
+        <div class="room-icon">&#x1F6B6;</div>
+        <div class="room-name">Hallway</div>
+        <div class="room-status clear" id="status-hallway">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-kitchen">
+        <div class="room-icon">&#x1F373;</div>
+        <div class="room-name">Kitchen</div>
+        <div class="room-status clear" id="status-kitchen">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-livingroom">
+        <div class="room-icon">&#x1F6CB;</div>
+        <div class="room-name">Living Room</div>
+        <div class="room-status clear" id="status-livingroom">SAFE!</div>
+      </div>
+      <div class="room-item" id="item-garage">
+        <div class="room-icon">&#x1F697;</div>
+        <div class="room-name">Garage</div>
+        <div class="room-status clear" id="status-garage">SAFE!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Panel -->
+  <div class="panel log-panel">
+    <div class="panel-title">What's Happening</div>
+    <div class="log-output" id="logOutput"></div>
+  </div>
+</div>
+
+<div class="scan-count-bar">TIMES WE'VE CHECKED THE WHOLE HOUSE: <strong id="scanCount">0</strong></div>
+
+<script>
+const rooms = ['bedroom','closet','underbed','bathroom','hallway','kitchen','livingroom','garage'];
+const roomNames = {
+  bedroom: 'Bedroom', closet: 'Closet', underbed: 'Under the Bed',
+  bathroom: 'Bathroom', hallway: 'Hallway', kitchen: 'Kitchen',
+  livingroom: 'Living Room', garage: 'Garage'
+};
+
+const scanPhrases = {
+  bedroom: [
+    'Checking all the bedroom corners...',
+    'Looking behind the curtains and pillows...',
+    'Making sure the bedroom windows are safe...',
+    'Scanning around the bed and nightstand...',
+    'Checking the whole bedroom from top to bottom...',
+  ],
+  closet: [
+    'Checking inside the closet...',
+    'Looking between all the clothes and shelves...',
+    'Shining the scanner into every corner...',
+    'Making sure nothing is hiding behind anything...',
+    'Closet is being checked really carefully...',
+  ],
+  underbed: [
+    'Looking under the bed really carefully...',
+    'Checking every inch under the mattress...',
+    'Scanning the whole area under the bed...',
+    'Making sure there is nothing under there at all...',
+    'Under-bed area getting a super thorough look...',
+  ],
+  bathroom: [
+    'Checking behind the shower curtain...',
+    'Looking in all the bathroom corners...',
+    'Making sure the bathroom cabinets are safe...',
+    'Scanning around the tub and sink...',
+    'The whole bathroom is being checked...',
+  ],
+  hallway: [
+    'Checking every part of the hallway...',
+    'Looking in all the corners and doorways...',
+    'Making sure the hallway is totally clear...',
+    'Scanning from one end to the other...',
+    'The hallway looks great and safe...',
+  ],
+  kitchen: [
+    'Checking around the kitchen...',
+    'Looking inside the cabinets and pantry...',
+    'Making sure nothing is behind the fridge...',
+    'Scanning all around the kitchen...',
+    'Everything in the kitchen looks perfect...',
+  ],
+  livingroom: [
+    'Checking behind all the furniture...',
+    'Looking under the couch cushions...',
+    'Making sure the living room is all clear...',
+    'Scanning behind the TV and shelves...',
+    'The living room is looking great...',
+  ],
+  garage: [
+    'Checking all around the garage...',
+    'Looking in every corner with the scanner...',
+    'Making sure the garage is totally safe...',
+    'Scanning behind everything in the garage...',
+    'The garage is getting a full check...',
+  ]
+};
+
+const clearPhrases = [
+  'NO MONSTERS FOUND! ALL SAFE!',
+  'TOTALLY CLEAR - NOTHING HERE!',
+  'ALL SAFE - ZERO MONSTERS!',
+  'CHECKED EVERYWHERE - ALL GOOD!',
+  'COMPLETELY SAFE AND SOUND!',
+  'NOT A SINGLE MONSTER!',
+  'SAFE! NOTHING SCARY AT ALL!',
+  'ALL CLEAR - YOU ARE PROTECTED!',
+  'PERFECTLY SAFE! NOTHING TO WORRY ABOUT!',
+  'SUPER SAFE - NOT EVEN A TINY MONSTER!',
+];
+
+const ambientMessages = [
+  'Monster Protection Shield is keeping you safe',
+  'All 8 rooms confirmed safe and sound',
+  'Your room is safe and cozy',
+  'No monster has ever gotten past this scanner',
+  'All the sensors are keeping watch over you',
+  'This is the safest house ever scanned!',
+  'Everything is totally okay right now',
+  'The whole house is monster-free as always',
+  'Sweet dreams shield: fully powered up',
+  'Every shadow checked - just normal shadows!',
+  'Nothing hiding anywhere - we checked!',
+  'Chance of monsters: zero!',
+  'Monster guard is watching over you',
+  'You are 100% safe right now',
+  'All the lights and sensors are on your side',
+  'Your house is completely protected',
+  'The scanner has never found a single monster here',
+  'Everything is peaceful and safe tonight',
+];
+
+const reassurancePhrases = [
+  'You are completely safe right now',
+  'Nothing scary is anywhere near here',
+  'This house is totally protected',
+  'Every single room has been checked',
+  'You can relax - we are watching over everything',
+  'No monsters have ever been found here',
+  'The whole house is safe and sound',
+  'Everything is perfectly okay',
+  'You are protected all night long',
+  'There is nothing to worry about at all',
+  'Every corner of your house is safe',
+  'The monster scanner has got you covered',
+];
+
+let scanCount = 0;
+let startTime = Date.now();
+const MAX_LOG_LINES = 80;
+
+function getTimestamp() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-US', { hour12: false });
+}
+
+function addLog(msg, type = 'info') {
+  const log = document.getElementById('logOutput');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="timestamp">[${getTimestamp()}]</span> <span class="${type}">${msg}</span>`;
+  log.appendChild(line);
+
+  while (log.children.length > MAX_LOG_LINES) {
+    log.removeChild(log.firstChild);
+  }
+
+  log.scrollTop = log.scrollHeight;
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Uptime ticker
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+  const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('uptime').textContent = `${h}:${m}:${s}`;
+}, 1000);
+
+// Fluctuate scan power for realism
+setInterval(() => {
+  const base = 97 + Math.floor(Math.random() * 4);
+  document.getElementById('scanPower').textContent = base + '%';
+}, 4000);
+
+// Rotate reassurance banner
+let reassuranceIndex = 0;
+setInterval(() => {
+  const banner = document.getElementById('reassuranceBanner');
+  banner.style.opacity = '0';
+  setTimeout(() => {
+    reassuranceIndex = (reassuranceIndex + 1) % reassurancePhrases.length;
+    banner.textContent = reassurancePhrases[reassuranceIndex];
+    banner.style.opacity = '1';
+  }, 800);
+}, 8000);
+
+async function scanRoom(room) {
+  const statusEl = document.getElementById(`status-${room}`);
+  const dotEl = document.getElementById(`dot-${room}`);
+  const itemEl = document.getElementById(`item-${room}`);
+
+  statusEl.className = 'room-status scanning';
+  statusEl.textContent = 'CHECKING...';
+  dotEl.className = 'room-dot active-scan';
+  itemEl.classList.add('highlight', 'active-room');
+  itemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  addLog(`Checking: ${roomNames[room]}...`, 'warn');
+
+  const msgs = scanPhrases[room];
+  const count = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) {
+    await sleep(800 + Math.random() * 1200);
+    addLog(pick(msgs), 'info');
+  }
+
+  await sleep(600 + Math.random() * 800);
+
+  statusEl.className = 'room-status clear';
+  statusEl.textContent = 'SAFE!';
+  dotEl.className = 'room-dot scanned';
+  itemEl.classList.remove('highlight', 'active-room');
+
+  itemEl.classList.add('clear-flash');
+  setTimeout(() => itemEl.classList.remove('clear-flash'), 1200);
+
+  addLog(`${roomNames[room]}: ${pick(clearPhrases)}`, 'success');
+}
+
+async function runContinuousScan() {
+  addLog('=== MONSTER SCANNER IS ON AND READY! ===', 'success');
+  addLog('Starting up the monster protection...', 'info');
+  addLog('All sensors are working perfectly!', 'info');
+  addLog('Monster Protection Shield is ON!', 'success');
+  await sleep(2000);
+
+  while (true) {
+    const order = [...rooms].sort(() => Math.random() - 0.5);
+
+    addLog('--- Checking every room again! ---', 'warn');
+
+    for (const room of order) {
+      await scanRoom(room);
+      await sleep(500 + Math.random() * 1000);
+    }
+
+    scanCount++;
+    document.getElementById('scanCount').textContent = scanCount;
+
+    addLog('=== EVERY ROOM CHECKED! YOUR HOUSE IS 100% SAFE! ===', 'success');
+
+    const pauseTime = 5000 + Math.random() * 5000;
+    const ambientCount = 2 + Math.floor(Math.random() * 3);
+    const ambientInterval = pauseTime / ambientCount;
+
+    for (let i = 0; i < ambientCount; i++) {
+      await sleep(ambientInterval);
+      addLog(pick(ambientMessages), 'info');
+    }
+  }
+}
+
+runContinuousScan();
+</script>
+</body>
+</html>
